@@ -133,3 +133,28 @@ begin
     return null;
 end;
 $$ language plpgsql;
+
+
+
+create trigger trig_update_order_total
+after insert or update or delete on order_items
+for each row
+execute function update_order_total_func();
+
+-- тригер для лог створ замовлення
+create or replace function log_new_order_func()
+returns trigger as $$
+begin
+    insert into order_log (order_id, customer_id, action)
+    values (new.order_id, new.customer_id, 'order_created');
+
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger trig_log_new_order
+after insert on orders
+for each row
+execute function log_new_order_func();
+
+
